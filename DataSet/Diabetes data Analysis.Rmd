@@ -1,0 +1,187 @@
+**DIABETES DATA ANALYSIS**
+
+1.  **Importing the required dataset**
+
+```{r}
+diabetes<-read.csv("E:/5th sem/R/diabetes.csv",header=TRUE)
+```
+
+2\. **Look at the data set using summary() and str() to understand what type of data we are working with**
+
+```{r}
+summary(diabetes)
+str(diabetes)
+```
+
+```{r}
+is.na(sum(diabetes))
+```
+
+```{r}
+#age category column
+
+diabetes$Age_Cat <- ifelse(diabetes$age < 21, "<21", 
+                   ifelse((diabetes$age>=21) & (diabetes$age<=25), "21-25", 
+                   ifelse((diabetes$age>25) & (diabetes$age<=30), "25-30",
+                   ifelse((diabetes$age>30) & (diabetes$age<=35), "30-35",
+                   ifelse((diabetes$age>35) & (diabetes$age<=40), "35-40",
+                   ifelse((diabetes$age>40) & (diabetes$age<=50), "40-50",
+                   ifelse((diabetes$age>50) & (diabetes$age<=60), "50-60",">60")))))))
+diabetes$age_Cat <- factor(diabetes$Age_Cat, levels = c('<21','21-25','25-30','30-35','35-40','40-50','50-60','>60'))
+table(diabetes$age_Cat)
+
+# Histogram of Age
+library(ggplot2)
+
+ggplot(aes(x = age), data=diabetes) +
+        geom_histogram(binwidth=1, color='black', fill = "#F79420") +
+        scale_x_continuous(limits=c(20,90), breaks=seq(20,90,5)) +
+        xlab("Age") +
+        ylab("No of people by age")
+```
+
+3.  **Univariate Analysis**
+
+    ```{r}
+    par(mfrow=c(2,2))
+    hist(diabetes$pregnancies)
+    hist(diabetes$glucose)
+    hist(diabetes$age)
+    hist(diabetes$bmi)
+    ```
+
+```{r}
+shapiro.test(diabetes$pregnancies)
+```
+
+```{r}
+shapiro.test(diabetes$glucose)
+```
+
+```{r}
+shapiro.test(diabetes$bmi)
+```
+
+```{r}
+shapiro.test(diabetes$age)
+```
+
+**From these distribution graphs,**
+
+**Age and number of times pregnant are not in normal distributions as expected since the underlying population should not be normally distributed either.**
+
+**Glucose level and BMI are following a normal distribution.**
+
+```{r}
+
+```
+
+```{r}
+# modify the data column names slightly for easier typing
+names(diabetes)[7] <- "dpf"
+names(diabetes) <- tolower(names(diabetes))
+
+str(diabetes)
+print(paste0("number of observations = ", dim(diabetes)[1]))
+print(paste0("number of predictors = ", dim(diabetes)[2]))
+```
+
+```{r}
+ par(mfrow = c(1, 2))
+
+# boxplot
+with(diabetes, boxplot(dpf ~ outcome, 
+                       ylab = "Diabetes Pedigree Function", 
+                       xlab = "Presence of Diabetes",
+                       main = "Figure A",
+                       outline = FALSE))
+
+# subsetting based on response
+with <- diabetes[diabetes$outcome == 1, ]
+without <- diabetes[diabetes$outcome == 0, ]
+
+# density plot
+plot(density(with$glucose), 
+     xlim = c(0, 250),
+     ylim = c(0.00, 0.02),
+     xlab = "Glucose Level",
+     main = "Figure B",
+     lwd = 2)
+lines(density(without$glucose), 
+      col = "red",
+      lwd = 2)
+legend("topleft", 
+       col = c("black", "red"), 
+       legend = c("With Diabetes", "Without Diabetes"), 
+       lwd = 2,
+       bty = "n")
+
+# simple two sample t-test with unequal variance
+t.test(with$dpf, without$dpf)
+```
+
+**Other plots such as boxplot or density plot can also be used to look at the difference in values of the variables between those with diabetes and those without. We can see from Figure B that the distribution to shifted towards the left for those without diabetes. This means those without diabetes generally have a lower blood glucose level.**
+
+```{r}
+par(mfrow=c(2,4))
+boxplot(diabetes$pregnancies~diabetes$outcome,
+        main="No. of Pregnancies vs Diabetes", xlab="Outcome",         ylab="Pregnancies")
+
+boxplot(diabetes$glucose~diabetes$outcome, main="Glucose vs. Diabetes", xlab="Outcome", ylab="Glucose")
+
+boxplot(diabetes$bloodpressure~diabetes$outcome, main="Blood Pressure vs. Diabetes", xlab="Outcome", ylab="Blood Pressure")
+
+boxplot(diabetes$skinthickness~diabetes$outcome, main="Skin Thickness vs. Diabetes",xlab="Outcome", ylab="Skin Thickness")
+
+boxplot(diabetes$insulin~diabetes$outcome, main="Insulin vs. Diabetes", xlab="Outcome", ylab="Insulin")
+
+boxplot(diabetes$bmi~diabetes$outcome, main="BMI vs. Diabetes", xlab="Outcome", ylab="BMI")
+
+boxplot(diabetes$dpf~diabetes$outcome, main="Diabetes Pedigree Function vs. Diabetes", xlab="Outcome", ylab = "DiabetesPedigreeFunction")
+
+boxplot(diabetes$age~diabetes$outcome, main="Age vs. Diabetes", xlab="Outcome", ylab="Age")
+```
+
+```{r}
+t.test(diabetes$age,diabetes$bloodpressure)
+```
+
+```{r}
+model1<-lm(bloodpressure~glucose,data = diabetes)
+summary(model1)
+```
+
+```{r}
+anova(model1,test="Chisq")
+```
+
+```{r}
+residuals<-residuals(model1)
+fitted<-fitted(model1)
+#create the residuals vs fitted
+plot(fitted,residuals,type = "p",col="light green")
+abline(h=0)
+```
+
+```{r}
+# correlation matrix
+library(reshape2)
+cor_melt <- melt(cor(diabetes[, 1:8]))
+cor_melt <- cor_melt[which(cor_melt$value > 0.5 & cor_melt$value != 1), ]
+cor_melt <- cor_melt[1:2, ]
+cor_melt
+
+```
+
+```{r}
+model2<-glm(outcome~pregnancies+glucose+bloodpressure+skinthickness+insulin+bmi+dpf,family=binomial,data = diabetes)
+summary(model2)
+```
+
+```{r}
+plot(model2)
+```
+
+```{r}
+
+```

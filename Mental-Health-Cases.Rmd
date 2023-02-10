@@ -1,0 +1,89 @@
+---
+title: 'Menatl Helath Cases in Karnataka Case Study '
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+# Importing Data Set
+
+```{r}
+
+library(readr)
+
+# Source : data.gov.in
+
+DS1 <- read_csv("DataSet/District_Wise_Mental_Health_Patients_2018-19.csv")
+
+head(DS1)
+```
+
+## 1. Top 10 District having a Suicide cases due to Mental Health Issues .
+
+```{r}
+library(ggplot2)
+
+Sus <-data.frame("District"= DS1$DISTRICT,"Sucide_cases"=DS1$SUICIDE_ATTEMPT_CASES)
+
+
+Sus_sort <- Sus[order(-Sus$Sucide_cases),]
+
+top10 <- head(Sus_sort,10)
+
+barplot(top10$Sucide_cases,names.arg = top10$District,xlab = "District",ylab = "Case Count")
+
+```
+
+## 2. Top 5 Districts having that possess high Mental Health Issues Cases due to Alcohol Consumption
+
+```{r}
+library(plotrix)
+
+Alc <- data.frame("District" = DS1$DISTRICT,"No_of_cases"=DS1$`ALCOHOL_&_SUBSTANCE_ABUSE`) 
+
+Alc_sort <- Alc[order(-Alc$No_of_cases),]
+
+t10_alc <- head(Alc_sort,5)
+par(cex = 2)
+pie3D(t10_alc$No_of_cases,labels = t10_alc$District)
+```
+
+## 3. Construction of Boxplot to understand distribution of Common and Severe Mental Health Disorder.
+
+```{r}
+
+SMD <- DS1$`SEVERE_MENTAL_DISORDER_(SMD)`
+CMD <- DS1 $`COMMON_MENTAL _DISORDER(CMD)`
+
+boxplot(SMD)
+boxplot(CMD)
+```
+
+| The first plot shows how **symmetrical** the **Common Mental Health Disorder** cases are distributed with Different cities
+| The second plot shows how **symmetrical** the **Severe Mental Health Disorder** cases are distributed with Different cities .
+| 
+
+## 4. Performing linear regression factors affecting Severe Mental Disorder.
+
+```{r}
+model<- lm(DS1$`SEVERE_MENTAL_DISORDER_(SMD)`~DS1$`ALCOHOL_&_SUBSTANCE_ABUSE`)
+summary(model)
+```
+
+| The model Concludes that the effect of Alcohol and Substance abuse effect is statistically significant.
+
+The R-squared value of 0.6869 indicates that 68.69% of the variance in the dependent variable can be explained by the independent variable.
+
+## 5.Performing Two tailed test to show the mean difference between Common Mental Health Disorder and Severe Mental Health Disorder.
+
+```{r}
+
+res <- t.test(SMD,CMD)
+res
+summary(res)
+
+```
+
+> The above test helps us to understand that there is a significant difference between Common mental Disorder and Severe Mental Health Disorder cases.
+>
+> The **p-value (0.03393)** is the probability of observing a t-statistic as extreme or more extreme than the one observed, assuming that the null hypothesis is true
